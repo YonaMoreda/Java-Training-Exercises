@@ -1,8 +1,11 @@
 package academy.capgemini.controller;
 
 import academy.capgemini.model.Arena;
-import academy.capgemini.model.Contestant;
+import academy.capgemini.model.contestants.Contestant;
+import academy.capgemini.model.Pair;
+import academy.capgemini.model.contestants.President;
 
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -24,13 +27,14 @@ public class ArenaController {
         double numberOfAliveContestants = NUMBER_OF_CONTESTANTS;
         int day = 0;
         while (numberOfAliveContestants > 1) {
-//            float chanceOfBattleItem = random.nextFloat();
+            this.provideBattleItemsToContestants();
+            this.replenishContestantHealths();
             var chanceOfMeeting = random.nextFloat();
             double hoursLeftInTheDay = HOURS_IN_A_DAY;
-            while (hoursLeftInTheDay > 0) {
+            while (hoursLeftInTheDay > 0 && numberOfAliveContestants > 1) {
                 log.info(">>> Hours left in the day " + hoursLeftInTheDay);
-                var firstContestant = arena.getContestants().get(random.nextInt(arena.getContestants().size()));
-                var secondContestant = arena.getContestants().get(random.nextInt(arena.getContestants().size()));
+                var firstContestant = getAPairOfContestants().getX();
+                var secondContestant = getAPairOfContestants().getY();
                 if (twoMeet(chanceOfMeeting)) {
                     log.info(">> Contestants have met to battle to their deaths!");
                     var survivingContestant = firstContestant.fightTillDeath(secondContestant);
@@ -43,12 +47,46 @@ public class ArenaController {
                     }
                 }
                 hoursLeftInTheDay--;
+                numberOfAliveContestants = arena.getContestants().size();
             }
-            numberOfAliveContestants = arena.getContestants().size();
             log.info("Day " + day + " over.");
             log.info("Number of alive contestants: " + numberOfAliveContestants + ". " + (NUMBER_OF_CONTESTANTS - numberOfAliveContestants) + " contestants have died.");
             day++;
         }
+        log.info("The Hunger Games is over");
+        Contestant champ = arena.getContestants().get(0);
+        log.info("Contestant " + champ.getName() + " is the champion.");
+        President snow = President.getInstance();
+        snow.attack(champ);
+    }
+
+    private void replenishContestantHealths() {
+        for(Contestant contestant : arena.getContestants()) {
+            contestant.replenish();
+        }
+    }
+
+    private void provideBattleItemsToContestants() {
+        for (Contestant contestant : arena.getContestants()) {
+            float chanceOfBattleItem = random.nextFloat();
+            if (chanceOfBattleItem <= 0.05) {
+                contestant.buff(10);
+            } else if (chanceOfBattleItem <= 0.1) {
+                contestant.buff(3);
+            } else if (chanceOfBattleItem <= 0.3) {
+                contestant.buff(2);
+            }
+        }
+    }
+
+    private Pair<Contestant, Contestant> getAPairOfContestants() {
+        Pair<Contestant, Contestant> pair = new Pair<>();
+        List<Contestant> contestants = arena.getContestants();
+        pair.setX(contestants.get(random.nextInt(contestants.size())));
+        arena.getContestants().remove(pair.getX());
+        pair.setY(contestants.get(random.nextInt(contestants.size())));
+        arena.getContestants().add(pair.getX());
+        return pair;
     }
 
     private boolean twoMeet(float chanceOfMeeting) {

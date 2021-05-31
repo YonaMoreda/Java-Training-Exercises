@@ -1,5 +1,9 @@
 package academy.capgemini.model;
 
+import academy.capgemini.model.contestants.Contestant;
+import academy.capgemini.model.contestants.FemaleContestant;
+import academy.capgemini.model.contestants.MaleContestant;
+
 import java.util.ArrayList;
 import java.util.List;
 
